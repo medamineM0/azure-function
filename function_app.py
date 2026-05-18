@@ -16,8 +16,11 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 @app.route(route="Scrap", methods=["GET", "POST"])
 def Scrap(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Scrap function processed a request.")
+    
     permalinks = None
     permalink =  None
+    proxy_url = os.environ.get("WEBSHARE_PROXY_URL")
+    
     if not permalink:
         try:
             req_body = req.get_json()
@@ -41,7 +44,7 @@ def Scrap(req: func.HttpRequest) -> func.HttpResponse:
         )
 
     
-    miner = YARS()
+    miner = YARS(proxy=proxy_url)
     results = []
     for link in links_to_process:
         if "reddit.com" in link:
@@ -50,7 +53,6 @@ def Scrap(req: func.HttpRequest) -> func.HttpResponse:
         data = miner.scrape_post_details(link)
         results.append(data)
 
-    # 4) Retourner une liste
     return func.HttpResponse(
         json.dumps(results, ensure_ascii=False, indent=4),
         status_code=200,
